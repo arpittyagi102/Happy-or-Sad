@@ -5,57 +5,73 @@ export default function Home() {
   const [inputValue, setInputValue] = useState("");
   const [commentsList, setCommentsList] = useState([]);
   const [sentList,setSentiList]=useState([])
+  const [videoId, setVideoId] = useState("");
   const [result, setResult] = useState({
     positive:0,
     neutral:0,
     negative:0
   })
 
-  async function fetchComments(videoId) {
-    const response = await fetch(
-      `https://www.googleapis.com/youtube/v3/commentThreads?videoId=${videoId}&key=AIzaSyBcZkihhhLCLsKv2ncOic0E3_XWOx3H9Ic&part=snippet,replies&maxResults=100`
-    );
-    const data = await response.json();
-
-    const comments = data.items.map(
-      (item) => item.snippet.topLevelComment.snippet.textDisplay
-    );
-
-    return comments;
-  }
-
   async function handleClick() {
     const url = new URL(inputValue);
-    const { search } = url;
-    const videoId = search.slice(3, 17);
-
-    const comments = await fetchComments(videoId);
-    console.log(comments.length)
-    setCommentsList(comments);
+    const { hostname,search,pathname } = url;
+  
+    if (hostname === "youtu.be") {
+      setVideoId(pathname.slice(1));
+    }
+    else if(hostname === "www.youtube.com") {
+      setVideoId(search.slice(3, 17));
+    }
+    else{
+      console.log("Error ")
+    }
   }
 
+  useEffect(()=>{
+    async function fetchData(){
+      try {
+        const response = await fetch(
+          `https://www.googleapis.com/youtube/v3/commentThreads?videoId=v5ChnoswSaE&key=YOUR_API_KEY&part=snippet,replies&maxResults=100`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          const temp = data.items.map(
+            (item) => item.snippet.topLevelComment.snippet.textDisplay
+          );
+          setCommentsList(temp);
+        } else {
+          console.log('Error:', response.status);
+        }
+      } catch (error) {
+        console.log('Error:', error);
+      }
+    }
+    fetchData();
+  },[videoId]) 
+    
+
   useEffect(() => {
-    var eksentiList=[];
     if (commentsList.length > 0) {
-      for (let i = 0; i < commentsList.length; i++) {
+      const sentimentList = commentsList.map(comment => {
         const sentiment = new Sentiment();
-        eksentiList = [...eksentiList,sentiment.analyze(commentsList[i]).score];
-      }
-      setSentiList(eksentiList);
-    } 
-    let positive = 0;
-    let neutral = 0;
-    let negative = 0;
-    eksentiList.forEach(element => {
-      if (element > 0) {
-        positive++;
-      } else if (element === 0) {
-        neutral++;
-      } else {
-        negative++;
-      }
-    });
-    setResult({positive,neutral,negative});
+        return sentiment.analyze(comment).score;
+      });
+      setSentiList(sentimentList);
+  
+      let positive = 0;
+      let neutral = 0;
+      let negative = 0;
+      sentimentList.forEach(element => {
+        if (element > 0) {
+          positive++;
+        } else if (element === 0) {
+          neutral++;
+        } else {
+          negative++;
+        }
+      });
+      setResult({ positive, neutral, negative });
+    }
   }, [commentsList]);
 
   return (
