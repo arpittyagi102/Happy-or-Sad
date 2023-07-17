@@ -29,6 +29,10 @@ export default function Home() {
       console.log("Error ")
     }
   }
+  
+  useEffect(() => {
+    setMounted(true)
+  },[])
 
   useEffect(()=>{
     if(!videoId) return;
@@ -124,7 +128,7 @@ export default function Home() {
       </div>
       <div className={`text-blue-500 ${commentsList.length ? "flex" : "hidden"} `}><br/>*above visual representation shows the green, grey and red color in the <br/> ratio of positive, neutral and negative comments on the video respectively</div>
 
-      <div className="border-8 flex items-strech w-1/2 mt-10 bg-green-200 border-green-200 text-black text-xl p-2 h-min sm:w-11/12">
+      <div className="border-8 flex items-strech w-1/2 mt-10 bg-green-200 border-green-200 text-black text-xl p-2 h-min sm:w-11/12 dark:bg-green-700 dark:border-green-700 dark:text-white">
         👽 This Analyzer is not 100% accurate
       </div>
        
