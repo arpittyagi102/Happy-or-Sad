@@ -13,17 +13,14 @@ export default function Home() {
   })
 
   async function handleClick() {
-    console.log("Go button clicked")
     const url = new URL(inputValue);
     const { hostname,search,pathname } = url;
   
     if (hostname === "youtu.be") {
       setVideoId(pathname.slice(1));
-      console.log("Hostname is "+hostname);
     }
     else if(hostname === "www.youtube.com") {
       setVideoId(search.slice(3, 17));
-      console.log("Hostname is "+hostname);
     }
     else{
       console.log("Error ")
@@ -32,19 +29,18 @@ export default function Home() {
 
   useEffect(()=>{
     if(!videoId) return;
-    console.log("Now comments will be fetched with video id = " + videoId );
+
     async function fetchData(){
       try {
         const response = await fetch(
-          `https://www.googleapis.com/youtube/v3/commentThreads?videoId=${videoId}&key=${process.env.REACT_APP_GOOGLE_API_KEY}&part=snippet,replies&maxResults=100`
+          `https://www.googleapis.com/youtube/v3/commentThreads?videoId=${videoId}&key=${process.env.NEXT_PUBLIC_GOOGLE_API_KEY}&part=snippet,replies&maxResults=100`
         );
         if (response.ok) {
           const data = await response.json();
-          console.log(data);
           const temp = data.items.map(
             (item) => item.snippet.topLevelComment.snippet.textDisplay
           );
-          console.log("We got "+ temp.length +" comments")
+
           setCommentsList(temp);
         } else {
           console.log('Error:', response.status);
@@ -59,7 +55,6 @@ export default function Home() {
 
   useEffect(() => {
     if(!commentsList.length) return
-    console.log("Now we will analyze sentiments")
     if (commentsList.length > 0) {
       const sentimentList = commentsList.map(comment => {
         const sentiment = new Sentiment();
@@ -83,7 +78,6 @@ export default function Home() {
       positive /= sum;
       negative /= sum;
       neutral /= sum;
-      console.log({ positive, neutral, negative });
       setResult({ positive, neutral, negative });
     }
   }, [commentsList]);
