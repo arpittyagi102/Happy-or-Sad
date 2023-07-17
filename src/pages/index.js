@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import Sentiment from "sentiment";
+import dotenv from 'dotenv';
+dotenv.config();
 
 export default function Home() {
   const [inputValue, setInputValue] = useState("");
@@ -12,15 +14,20 @@ export default function Home() {
     negative:0
   })
 
+  const REACT_APP_GOOGLE_API_KEY="AIzaSyBcZkihhhLCLsKv2ncOic0E3_XWOx3H9Ic"
+
   async function handleClick() {
+    console.log("Go button clicked")
     const url = new URL(inputValue);
     const { hostname,search,pathname } = url;
   
     if (hostname === "youtu.be") {
       setVideoId(pathname.slice(1));
+      console.log("Hostname is "+hostname);
     }
     else if(hostname === "www.youtube.com") {
       setVideoId(search.slice(3, 17));
+      console.log("Hostname is "+hostname);
     }
     else{
       console.log("Error ")
@@ -28,16 +35,20 @@ export default function Home() {
   }
 
   useEffect(()=>{
+    if(!videoId) return;
+    console.log("Now comments will be fetched with video id = " + videoId );
     async function fetchData(){
       try {
         const response = await fetch(
-          `https://www.googleapis.com/youtube/v3/commentThreads?videoId=v5ChnoswSaE&key=YOUR_API_KEY&part=snippet,replies&maxResults=100`
+          `https://www.googleapis.com/youtube/v3/commentThreads?videoId=${videoId}&key=${REACT_APP_GOOGLE_API_KEY}&part=snippet,replies&maxResults=100`
         );
         if (response.ok) {
           const data = await response.json();
+          console.log(data);
           const temp = data.items.map(
             (item) => item.snippet.topLevelComment.snippet.textDisplay
           );
+          console.log("We got "+ temp.length +" comments")
           setCommentsList(temp);
         } else {
           console.log('Error:', response.status);
@@ -51,6 +62,8 @@ export default function Home() {
     
 
   useEffect(() => {
+    if(!commentsList.length) return
+    console.log("Now we will analyze sentiments")
     if (commentsList.length > 0) {
       const sentimentList = commentsList.map(comment => {
         const sentiment = new Sentiment();
@@ -70,6 +83,11 @@ export default function Home() {
           negative++;
         }
       });
+      let sum=(positive+negative+neutral)/100;
+      positive /= sum;
+      negative /= sum;
+      neutral /= sum;
+      console.log({ positive, neutral, negative });
       setResult({ positive, neutral, negative });
     }
   }, [commentsList]);
@@ -96,11 +114,12 @@ export default function Home() {
           <button className="bg-green-800 h-full w-20 text-white sm:w-16" onClick={handleClick}> Go </button>
       </div>
 
-      <div className="rounded-full h-10 overflow-hidden min-w-min mt-8">
-        <div style={{width:4*result.positive+"px"}} className="h-full bg-green-500 inline-block"></div>
-        <div style={{width:4*result.neutral+"px"}} className="h-full bg-gray-400 inline-block"></div>
-        <div style={{width:4*result.negative+"px"}} className="h-full bg-red-500 inline-block"></div>
+      <div className={`rounded-full h-10 overflow-hidden min-w-min mt-8 w-1/3 md:w-11/12 ${commentsList.length ? "flex" : "hidden"}`}>
+        <div /* style={{width:4*result.positive+"px"}} */  style={{flex:result.positive}} className="h-full bg-green-500 inline-block"></div>
+        <div /* style={{width:4*result.neutral+"px"}} */ style={{flex:result.neutral}} className="h-full bg-gray-400 inline-block"></div>
+        <div /* style={{width:4*result.negative+"px"}} */ style={{flex:result.negative}} className="h-full bg-red-500 inline-block"></div>
       </div>
+      <div className={`text-blue-500 ${commentsList.length ? "flex" : "hidden"} `}><br/>*above visual representation shows the green, grey and red color in the <br/> ratio of positive, neutral and negative comments on the video respectively</div>
 
       <div className="border-8 flex items-strech w-1/2 mt-10 bg-green-200 border-green-200 text-black text-xl p-2 h-min sm:w-11/12">
         👽 This Analyzer is not 100% accurate
