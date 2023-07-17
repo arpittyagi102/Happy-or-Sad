@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import Sentiment from "sentiment";
-import dotenv from 'dotenv';
-dotenv.config();
 
 export default function Home() {
   const [inputValue, setInputValue] = useState("");
@@ -13,8 +11,6 @@ export default function Home() {
     neutral:0,
     negative:0
   })
-
-  const REACT_APP_GOOGLE_API_KEY="AIzaSyBcZkihhhLCLsKv2ncOic0E3_XWOx3H9Ic"
 
   async function handleClick() {
     console.log("Go button clicked")
@@ -40,7 +36,7 @@ export default function Home() {
     async function fetchData(){
       try {
         const response = await fetch(
-          `https://www.googleapis.com/youtube/v3/commentThreads?videoId=${videoId}&key=${REACT_APP_GOOGLE_API_KEY}&part=snippet,replies&maxResults=100`
+          `https://www.googleapis.com/youtube/v3/commentThreads?videoId=${videoId}&key=${process.env.REACT_APP_GOOGLE_API_KEY}&part=snippet,replies&maxResults=100`
         );
         if (response.ok) {
           const data = await response.json();
